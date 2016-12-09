@@ -4,12 +4,19 @@ Simple implementation of a one layer LSTM with softmax layer for prediction
 import numpy as np
 from collections import defaultdict
 
+# seed np random generator
+np.random.seed(1234)
+
 def sigmoid(x):
     return 1. / (1 + np.exp(-x))
 
 class LstmCell(object):
 
     def __init__(self, input_dim, num_hidden):
+        # Model meta-data
+        self.input_dim = input_dim
+        self.num_hidden = num_hidden
+
         # Initialize model parameters
         self.Wix = np.random.randn(num_hidden, input_dim)*0.01
         self.Wih = np.random.randn(num_hidden, input_dim)*0.01
@@ -26,11 +33,11 @@ class LstmCell(object):
         self.bg = np.zeros((num_hidden,1))
         self.by = np.zeros((input_dim,1))
 
-    def forward(self, inputs, targets, prev_h, prev_c):
+    def forward(self, inputs, targets, h_prev, c_prev):
         # Forward pass of lstm
         cache = defaultdict(lambda x: defaultdict)
-        cache['h'][-1] = np.copy(prev_h)
-        cache['c'][-1] = np.copy(prev_c)
+        cache['h'][-1] = np.copy(h_prev)
+        cache['c'][-1] = np.copy(c_prev)
         loss = 0
 
         for t in xrange(len(inputs)):
