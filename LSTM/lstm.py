@@ -19,13 +19,13 @@ class LstmCell(object):
 
         # Initialize model parameters
         self.Wix = np.random.randn(num_hidden, input_dim)*0.01
-        self.Wih = np.random.randn(num_hidden, input_dim)*0.01
+        self.Wih = np.random.randn(num_hidden, num_hidden)*0.01
         self.Wox = np.random.randn(num_hidden, input_dim)*0.01
-        self.Woh = np.random.randn(num_hidden, input_dim)*0.01
+        self.Woh = np.random.randn(num_hidden, num_hidden)*0.01
         self.Wfx = np.random.randn(num_hidden, input_dim)*0.01
-        self.Wfh = np.random.randn(num_hidden, input_dim)*0.01
+        self.Wfh = np.random.randn(num_hidden, num_hidden)*0.01
         self.Wgx = np.random.randn(num_hidden, input_dim)*0.01
-        self.Wgh = np.random.randn(num_hidden, input_dim)*0.01
+        self.Wgh = np.random.randn(num_hidden, num_hidden)*0.01
         self.Why = np.random.randn(input_dim, num_hidden)*0.01 # input_dim = output_dim
         self.bi = np.zeros((num_hidden,1))
         self.bo = np.zeros((num_hidden,1))
@@ -55,10 +55,11 @@ class LstmCell(object):
 
     def backward(self, cache, targets):
         # Backward pass to compute gradients
-        dWix, dWih, dWox, dWoh, dWfx, dWfh, dWgx, dWgh = [np.zeros_like(self.Wix) for i in range(8)]
+        dWix, dWox, dWfx, dWgx = [np.zeros_like(self.Wix) for i in range(4)]
+        dWih, dWoh, dWfh, dWgh = [np.zeros_like(self.Wih) for i in range(4)]
         dbi, dbo, dbf, dbg = [np.zeros_like(self.bi) for i in range(4)]
         dWhy, dby = np.zeros_like(self.Why), np.zeros_like(self.by)
-        dhnext, dcnext = np.zeros_like(cache['h'][0]), np.zeros_like(cache['s'][0])
+        dhnext, dcnext = np.zeros_like(cache['h'][0]), np.zeros_like(cache['c'][0])
 
         for t in reversed(xrange(len(targets))):
             dy = cache['p'][t]
