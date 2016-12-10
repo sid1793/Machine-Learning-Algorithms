@@ -12,12 +12,13 @@ def preprocess_char_text_data(filename):
 
     input_data= []
     targets = []
-
     # one hot encoding of chars
-    for i in data[:10000]:
+    for i in data[:2000]:
         x = np.zeros((vocab_len,1))
         x[char2idx[i]] = 1
         input_data.append(x)
         targets.append(x)
 
     return input_data, targets, char2idx, idx2char
+
+#preprocess_char_text_data('input.txt')

@@ -35,7 +35,7 @@ class LstmCell(object):
 
     def forward(self, inputs, targets, h_prev, c_prev):
         # Forward pass of lstm
-        cache = defaultdict(lambda x: defaultdict)
+        cache = defaultdict(lambda : defaultdict(np.float64))
         cache['h'][-1] = np.copy(h_prev)
         cache['c'][-1] = np.copy(c_prev)
         loss = 0
@@ -49,7 +49,7 @@ class LstmCell(object):
             cache['h'][t] = cache['c'][t] * cache['o'][t] # h(t)
             cache['y'][t] = np.dot(self.Why, cache['h'][t]) + self.by # unnormalized log probabilities
             cache['p'][t] = np.exp(cache['y'][t]) / np.sum(np.exp(cache['y'][t])) # softmax for prediction
-            loss += -np.log(cache['p'][t][targets[t]])
+            loss += -np.log(cache['p'][t][np.argmax(targets[t])])
 
         return cache, loss
 
@@ -60,9 +60,9 @@ class LstmCell(object):
         dWhy, dby = np.zeros_like(self.Why), np.zeros_like(self.by)
         dhnext, dcnext = np.zeros_like(cache['h'][0]), np.zeros_like(cache['s'][0])
 
-        for t in reverse(xrange(len(targets))):
+        for t in reversed(xrange(len(targets))):
             dy = cache['p'][t]
-            dy[target] -= 1 # backprop into y
+            dy[np.argmax(targets[t])] -= 1 # backprop into y
             dby += dy # bias of y
             dWhy += np.dot(dy, cache['h'][t].T)
             dh = np.dot(self.Why.T, dy) + dhnext # backprop into h from branches
@@ -70,8 +70,8 @@ class LstmCell(object):
             # Backprop into c, i, o, g and f
             dc = dh * cache['o'][t] + dcnext # backprop into c from two branches
             do = dh * cache['c'][t]
-            di = dg * cache['g'][t]
-            dg = di * cache['i'][t]
+            di = dc * cache['g'][t]
+            dg = dc * cache['i'][t]
             df = dc * cache['c'][t-1]
 
             # Backprop into non-linearities
@@ -96,7 +96,7 @@ class LstmCell(object):
 
             # Gradient for next iteration
             dhnext = np.sum(np.dot(x.T, y) for x,y in zip([self.Wih, self.Woh, self.Wfh, self.Wgh],
-                                                          [diraw, doraw, dfraw, dhraw]))
+                                                          [diraw, doraw, dfraw, dgraw]))
             dcnext = dc * cache['f'][t]
 
             # Return gradients

@@ -6,10 +6,6 @@ def train(model, learning_rate, input, target, iterations, batch_size):
     """
     Train LSTM cell using SGD
     """
-
-    h_prev = np.zeros_like((model.num_hidden, 1))
-    c_prev = np.zeros_like((model.num_hidden, 1))
-
     #for i in xrange(iterations):
     idx = 0
     n = 0
@@ -17,18 +13,18 @@ def train(model, learning_rate, input, target, iterations, batch_size):
 
         if idx + batch_size + 1 >= len(input) or idx == 0:
             # reset memory state of LSTM
-            h_prev = np.zeros_like((model.num_hidden, 1))
-            c_prev = np.zeros_like((model.num_hidden, 1))
+            h_prev = np.zeros((model.num_hidden, 1))
+            c_prev = np.zeros((model.num_hidden, 1))
             idx = 0
 
         # forward step
         cache, loss = model.forward(input[idx:idx+batch_size], target[idx+1:idx+batch_size+1], h_prev, c_prev)
 
-        if i % 100 == 0:
-            print 'Loss at iteration {} is {}'.format(i, loss)
+        #if n % 100 == 0:
+        #    print 'Loss at iteration {} is {}'.format(idx, loss)
 
         # backward pass to get gradients
-        dWix, dWih, dWox, dWoh, dWfx, dWfh, dWgx, dWgh, dWhy, dbi, dbo, dbf, dbg, dby = model.backward(cache, targets)
+        dWix, dWih, dWox, dWoh, dWfx, dWfh, dWgx, dWgh, dWhy, dbi, dbo, dbf, dbg, dby = model.backward(cache, target[idx+1:idx+batch_size+1])
 
         # update model params
         model.Wix -= learning_rate * dWix
@@ -59,18 +55,10 @@ def main():
     input, target, char2idx, idx2char = preprocess_char_text_data('input.txt')
 
     # train model
-    model = LstmCell(len(char2idx), 100)
-    train(model, 0.01, input, target, 100, 25)
+    model = LstmCell(100, 100)
+    #cache, loss = model.forward(input[:10], target[1:11], np.zeros((100,1)), np.zeros((100,1)))
+    #print len(cache['p'][9])
+    train(model, 0.1, input, target, 100, 25)
 
 if __name__ == "__main__":
     main()
-
-
-
-
-
-
-
-
-
-
