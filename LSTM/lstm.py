@@ -53,7 +53,7 @@ class LstmCell(object):
 
         return cache, loss
 
-    def backward(self, cache, targets):
+    def backward(self, cache, inputs, targets):
         # Backward pass to compute gradients
         dWix, dWox, dWfx, dWgx = [np.zeros_like(self.Wix) for i in range(4)]
         dWih, dWoh, dWfh, dWgh = [np.zeros_like(self.Wih) for i in range(4)]
@@ -61,7 +61,7 @@ class LstmCell(object):
         dWhy, dby = np.zeros_like(self.Why), np.zeros_like(self.by)
         dhnext, dcnext = np.zeros_like(cache['h'][0]), np.zeros_like(cache['c'][0])
 
-        for t in reversed(xrange(len(targets))):
+        for t in reversed(xrange(len(inputs))):
             dy = cache['p'][t]
             dy[np.argmax(targets[t])] -= 1 # backprop into y
             dby += dy # bias of y
@@ -82,13 +82,13 @@ class LstmCell(object):
             dgraw = (1 - cache['g'][t]**2) * dg
 
             # Backprop into model params
-            dWix += np.dot(diraw, cache['x'][t].T)
+            dWix += np.dot(diraw, inputs[t].T)
             dWih += np.dot(diraw, cache['h'][t-1].T)
-            dWox += np.dot(doraw, cache['x'][t].T)
+            dWox += np.dot(doraw, inputs[t].T)
             dWoh += np.dot(doraw, cache['h'][t-1].T)
-            dWfx += np.dot(dfraw, cache['x'][t].T)
+            dWfx += np.dot(dfraw, inputs[t].T)
             dWfh += np.dot(dfraw, cache['h'][t-1].T)
-            dWgx += np.dot(dgraw, cache['x'][t].T)
+            dWgx += np.dot(dgraw, inputs[t].T)
             dWgh += np.dot(dgraw, cache['h'][t-1].T)
             dbi += diraw
             dbo += doraw
@@ -100,5 +100,5 @@ class LstmCell(object):
                                                           [diraw, doraw, dfraw, dgraw]))
             dcnext = dc * cache['f'][t]
 
-            # Return gradients
-            return dWix, dWih, dWox, dWoh, dWfx, dWfh, dWgx, dWgh, dWhy, dbi, dbo, dbf, dbg, dby
+        # Return gradients
+        return dWix, dWih, dWox, dWoh, dWfx, dWfh, dWgx, dWgh, dWhy, dbi, dbo, dbf, dbg, dby
