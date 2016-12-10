@@ -3,12 +3,10 @@ Simple implementation of a one layer LSTM with softmax layer for prediction
 """
 import numpy as np
 from collections import defaultdict
+from util import sigmoid
 
 # seed np random generator
 np.random.seed(1234)
-
-def sigmoid(x):
-    return 1. / (1 + np.exp(-x))
 
 class LstmCell(object):
 

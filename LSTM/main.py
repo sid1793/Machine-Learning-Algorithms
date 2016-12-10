@@ -1,10 +1,10 @@
 import numpy as np
 from lstm import LstmCell
-from util import preprocess_char_text_data
+from util import preprocess_char_text_data, sample_chars
 
-def train(model, learning_rate, input, target, iterations, batch_size):
+def train_char(model, learning_rate, input, targets, batch_size, idx2char):
     """
-    Train LSTM cell using SGD
+    Train char-LSTM cell using SGD
     """
     #for i in xrange(iterations):
     idx = 0
@@ -18,13 +18,16 @@ def train(model, learning_rate, input, target, iterations, batch_size):
             idx = 0
 
         # forward step
-        cache, loss = model.forward(input[idx:idx+batch_size], target[idx+1:idx+batch_size+1], h_prev, c_prev)
+        cache, loss = model.forward(input[idx:idx+batch_size], targets[idx+1:idx+batch_size+1], h_prev, c_prev)
 
         if n % 100 == 0:
-            print 'Loss at iteration {} is {}'.format(idx, loss)
+            print 'Loss at iteration {} is {}'.format(n, loss)
+            sam_seq = sample_chars(model, h_prev, c_prev, input[0], 200)
+            sent = ''.join(idx2char[i] for i in sam_seq)
+            print '-----\n {} \n----'.format(sent)
 
         # backward pass to get gradients
-        dWix, dWih, dWox, dWoh, dWfx, dWfh, dWgx, dWgh, dWhy, dbi, dbo, dbf, dbg, dby = model.backward(cache, input[idx:idx+batch_size], target[idx+1:idx+batch_size+1])
+        dWix, dWih, dWox, dWoh, dWfx, dWfh, dWgx, dWgh, dWhy, dbi, dbo, dbf, dbg, dby = model.backward(cache, input[idx:idx+batch_size], targets[idx+1:idx+batch_size+1])
 
         # update model params
         model.Wix -= learning_rate * dWix
@@ -52,13 +55,13 @@ def train(model, learning_rate, input, target, iterations, batch_size):
 
 def main():
     # get text data
-    input, target, char2idx, idx2char = preprocess_char_text_data('input.txt')
+    input, targets, char2idx, idx2char, vocab_len = preprocess_char_text_data('input.txt')
 
     # train model
-    model = LstmCell(len(char2idx), 100)
-    #cache, loss = model.forward(input[:10], target[1:11], np.zeros((100,1)), np.zeros((100,1)))
+    model = LstmCell(vocab_len, 100)
+    #cache, loss = model.forward(input[:10], targets[1:11], np.zeros((100,1)), np.zeros((100,1)))
     #print len(cache['p'][9])
-    train(model, 0.1, input, target, 100, 25)
+    train_char(model, 0.1, input, targets, 25, idx2char)
 
 if __name__ == "__main__":
     main()
