@@ -24,10 +24,10 @@ def cem(env, num_steps = 500, n_iter = 100, batch_size = 25, elite_frac = 0.2):
         theta_mean = np.mean(elite_thetas, axis = 0)
         theta_std = np.mean(np.square(elite_thetas - theta_mean.reshape(1, theta_dim)), axis = 0)
         print 'Iteration {}, Mean Reward = {}, Max Reward = {}'.format(i, np.mean(rewards), np.max(rewards))
-        run_episode(env, theta_mean, num_steps, render = True)
+        run_episode(env, theta_mean, 1000, render = True)
 
 def main():
-    env = gym.make('MountainCar-v0')
+    env = gym.make('CartPole-v0')
     cem(env)
 
 if __name__ == "__main__":
