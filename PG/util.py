@@ -11,8 +11,8 @@ def run_episode(agent, env, max_episode_length=25, render=False):
     rewards = []
     actions = []
     for i in range(max_episode_length):
-        #a = agent.take_action(obs)
-        a = env.action_space.sample()
+        obs = obs.reshape(1,env.observation_space.shape[0]) 
+        a = agent.take_action(obs)
         obs, rew, done, _ = env.step(a)
         observations.append(obs)
         rewards.append(rew)
