@@ -11,9 +11,18 @@ class PGAgent(object):
         """
         self.act_dim = act_dim
 
+        # Placeholder for number of steps
+        N = tf.placeholder(tf.int64)
+
         # Placeholder for observation
         observation = tf.placeholder(tf.float32, shape=(None, obs_dim))
         self.observation = observation
+
+        # Placeholder for actions
+        self.actions = tf.placeholder(tf.int64)
+
+        # Placeholder for advantage values
+        self.adv_vals = tf.placeholder(tf.float32)
 
         # Hidden Layer
         W0 = tf.Variable(tf.truncated_normal([obs_dim, hidden_dim],\
@@ -27,7 +36,24 @@ class PGAgent(object):
                                             stddev=1 / math.sqrt(hidden_dim)),\
                                             name="W1")
         b1 = tf.Variable(tf.zeros([act_dim]), name="b1")
+
+        # Op for probability distribution over actions
         self.prob = tf.nn.softmax(tf.matmul(h0, W1) + b1)
+
+        # Op for computing loss
+        self.loss = tf.matmul(self.prob[tf.range(N), actions], adv_vals) / N
+
+        # Op for computing grads
+        optimizer = tf.train.RMSPropOptimizer(learning_rate)
+        gradients = optimizer.compute_gradients(self.loss)
+
+        # Negate the gradients
+        new_gradients = []
+        for vars, grads in gradients:
+            new_gradients.append((vars, -grads))
+
+        # Op for updating params    
+        update = optimizer.apply_gradients(new_gradients)
 
     def take_action(self, obs):
         """
@@ -37,9 +63,11 @@ class PGAgent(object):
         prob_n = self.prob.eval(feed_dict={self.observation : obs})
         return np.random.choice(self.act_dim, p=prob_n[0])
 
-    def update_policy(self, advantage_vals):
+    def update_policy(self, obs, actions, advantage_vals):
         """
         Computes gradient of the score function estimator wrt to policy params
         and updates params
         """
-        raise NotImplementedError
+        self.update.eval(feed_dict = {self.observation : obs,
+                                      self.actions : actions,
+                                      self.adv_vals : advantage_vals})
