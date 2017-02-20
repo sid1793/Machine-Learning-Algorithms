@@ -9,17 +9,19 @@ class PGAgent(object):
         Build computation graph for stochastic policy network and corresponding
         functions to compute gradients and updates
         """
+        act_dim = action_space.n
+        obs_dim = observation_space.shape[0]
         self.act_dim = act_dim
-
-        # Placeholder for number of steps
-        N = tf.placeholder(tf.int64)
 
         # Placeholder for observation
         observation = tf.placeholder(tf.float32, shape=(None, obs_dim))
         self.observation = observation
 
+        # Number of time steps
+        N = tf.shape(observation)[0]
+
         # Placeholder for actions
-        self.actions = tf.placeholder(tf.int64)
+        self.actions = tf.placeholder(tf.int32)
 
         # Placeholder for advantage values
         self.adv_vals = tf.placeholder(tf.float32)
@@ -41,7 +43,7 @@ class PGAgent(object):
         self.prob = tf.nn.softmax(tf.matmul(h0, W1) + b1)
 
         # Op for computing loss
-        self.loss = tf.matmul(self.prob[tf.range(N), actions], adv_vals) / N
+        loss = tf.matmul(self.prob[tf.range(N), self.actions], self.adv_vals) / N
 
         # Op for computing grads
         optimizer = tf.train.RMSPropOptimizer(learning_rate)
@@ -53,7 +55,7 @@ class PGAgent(object):
             new_gradients.append((vars, -grads))
 
         # Op for updating params    
-        update = optimizer.apply_gradients(new_gradients)
+        self.update = optimizer.apply_gradients(new_gradients)
 
     def take_action(self, obs):
         """
@@ -68,6 +70,7 @@ class PGAgent(object):
         Computes gradient of the score function estimator wrt to policy params
         and updates params
         """
-        self.update.eval(feed_dict = {self.observation : obs,
-                                      self.actions : actions,
-                                      self.adv_vals : advantage_vals})
+        pass
+        #self.update.eval(feed_dict = {self.observation : obs,
+        #                              self.actions : actions,
+        #                              self.adv_vals : advantage_vals})

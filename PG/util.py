@@ -19,9 +19,9 @@ def run_episode(agent, env, max_episode_length=25, render=False):
         actions.append(a)
         if done: break
         if render: env.render()
-    return {"observations": observations[:-1],
-            "rewards": rewards,
-            "actions": actions
+    return {"observations": np.array(observations[:-1]),
+            "rewards": np.array(rewards),
+            "actions": np.array(actions)
            }
 
 def discounted_returns(rewards, gamma = 0.9):
