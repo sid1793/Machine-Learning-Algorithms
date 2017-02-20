@@ -4,7 +4,7 @@ import math
 
 class PGAgent(object):
 
-    def __init__(self, observation_space, action_space, hidden_dim=100):
+    def __init__(self, observation_space, action_space, learning_rate = 0.5, hidden_dim=100):
         """
         Build computation graph for stochastic policy network and corresponding
         functions to compute gradients and updates
@@ -40,14 +40,19 @@ class PGAgent(object):
         b1 = tf.Variable(tf.zeros([act_dim]), name="b1")
 
         # Op for probability distribution over actions
-        self.prob = tf.nn.softmax(tf.matmul(h0, W1) + b1)
+        prob = tf.nn.softmax(tf.matmul(h0, W1) + b1)
 
         # Op for computing loss
-        loss = tf.matmul(self.prob[tf.range(N), self.actions], self.adv_vals) / N
+        idxs_1 = tf.reshape(tf.range(N),(N,1))
+        idxs_2 = tf.reshape(self.actions,(N,1))
+        idxs = tf.concat([idxs_1, idxs_2],1)
+        prob_a = tf.gather_nd(prob, idxs)
+        self.loss = tf.reduce_sum(tf.multiply(prob_a, self.adv_vals)) / \
+                tf.cast(N, tf.float32)
 
         # Op for computing grads
         optimizer = tf.train.RMSPropOptimizer(learning_rate)
-        gradients = optimizer.compute_gradients(self.loss)
+        self.gradients = optimizer.compute_gradients(self.loss)
 
         # Negate the gradients
         new_gradients = []
@@ -55,7 +60,7 @@ class PGAgent(object):
             new_gradients.append((vars, -grads))
 
         # Op for updating params    
-        self.update = optimizer.apply_gradients(new_gradients)
+        #self.update = optimizer.apply_gradients(new_gradients)
 
     def take_action(self, obs):
         """
