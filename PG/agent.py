@@ -55,12 +55,10 @@ class PGAgent(object):
         self.gradients = optimizer.compute_gradients(self.loss)
 
         # Negate the gradients
-        new_gradients = []
-        for vars, grads in gradients:
-            new_gradients.append((vars, -grads))
+        new_gradients = [(-grad[0], grad[1]) for grad in self.gradients]
 
         # Op for updating params    
-        #self.update = optimizer.apply_gradients(new_gradients)
+        self.update = optimizer.apply_gradients(new_gradients)
 
     def take_action(self, obs):
         """
